@@ -1,0 +1,66 @@
+-- Services
+local UIS = game:GetService("UserInputService")
+local VIM = game:GetService("VirtualInputManager")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+-- Variables
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+local flags = {
+    Auto_Clicking = false,
+    Mouse_Locked = false,
+    Mouse_Locked_Position = Vector2.new(797.5433959960938, 286.1918640136719) -- initial lock position
+}
+local TaskWait = task.wait
+
+-- Keybinds
+local keybinds = {
+    Auto_Click = Enum.KeyCode.F,
+    Lock_Mouse_Position = Enum.KeyCode.G
+}
+
+-- Functions
+local function ToggleAutoClick()
+    flags.Auto_Clicking = not flags.Auto_Clicking
+    Gui.Text = "Auto Clicking: " .. (flags.Auto_Clicking and "ON" or "OFF") .. "\nMouse Locked: " .. (flags.Mouse_Locked and "ON" or "OFF")
+end
+
+local function ToggleMouseLock()
+    flags.Mouse_Locked = not flags.Mouse_Locked
+    Gui.Text = "Auto Clicking: " .. (flags.Auto_Clicking and "ON" or "OFF") .. "\nMouse Locked: " .. (flags.Mouse_Locked and "ON" or "OFF")
+end
+
+-- Input Handling
+UIS.InputBegan:Connect(function(input, gameProcessedEvent)
+    if not gameProcessedEvent then
+        if input.KeyCode == keybinds.Auto_Click then
+            ToggleAutoClick()
+        elseif input.KeyCode == keybinds.Lock_Mouse_Position then
+            ToggleMouseLock()
+        end
+    end
+end)
+
+-- Auto Click Loop
+while true do
+    Gui.Visible = true
+    Gui.Position = Vector2.new(Camera.ViewportSize.X - 133, Camera.ViewportSize.Y - 48)
+
+    if flags.Auto_Clicking then
+        for i = 1, 2 do
+            local x, y = flags.Mouse_Locked_Position.X, flags.Mouse_Locked_Position.Y
+            if not flags.Mouse_Locked then
+                x, y = UIS:GetMouseLocation().X, UIS:GetMouseLocation().Y
+            end
+            VIM:SendMouseButtonEvent(x, y, i == 2 and 1 or 0, true, nil, 0)
+            VIM:SendMouseButtonEvent(x, y, i == 2 and 1 or 0, false, nil, 0)
+        end
+    end
+
+    if Settings.Delay <= 0 then
+        RunService.RenderStepped:Wait()
+    else
+        TaskWait(Settings.Delay)
+    end
+end
